@@ -199,7 +199,8 @@ def predict_signal(car, bike, bus, truck, day, hour):
 
     return traffic, int(co2), signal
 import streamlit as st
-import requests
+import random
+import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -221,18 +222,29 @@ st.markdown(
 
 st.divider()
 
+# ---------------- IOT SENSOR SIMULATION ----------------
+def get_iot_sensor_data():
+    return {
+        "cars": random.randint(20, 100),
+        "bikes": random.randint(30, 150),
+        "buses": random.randint(2, 20),
+        "trucks": random.randint(5, 30),
+        "day": time.localtime().tm_wday,
+        "hour": time.localtime().tm_hour
+    }
+
 # ---------------- MODE SELECTION ----------------
 mode = st.radio(
     "📡 Select Data Input Mode",
-    ["Manual Input", "IoT Real-Time Mode"],
+    ["Manual Input", "IoT Real-Time Mode (Simulated)"],
     horizontal=True
 )
 
 st.subheader("📥 Traffic Details")
 
-# ---------------- INPUT SECTION ----------------
 col1, col2 = st.columns(2)
 
+# ---------------- MANUAL MODE ----------------
 if mode == "Manual Input":
 
     with col1:
@@ -249,39 +261,34 @@ if mode == "Manual Input":
         )
         hour = st.slider("⏰ Hour of Day", 0, 23, 12)
 
+# ---------------- IOT MODE ----------------
 else:
-    # -------- IOT MODE --------
-    try:
-        iot_data = requests.get("http://localhost:5000/get-latest").json()
+    sensor_data = get_iot_sensor_data()
 
-        car_count = iot_data["cars"]
-        bike_count = iot_data["bikes"]
-        bus_count = iot_data["buses"]
-        truck_count = iot_data["trucks"]
-        day = iot_data["day"]
-        hour = iot_data["hour"]
+    car_count = sensor_data["cars"]
+    bike_count = sensor_data["bikes"]
+    bus_count = sensor_data["buses"]
+    truck_count = sensor_data["trucks"]
+    day = sensor_data["day"]
+    hour = sensor_data["hour"]
 
-        with col1:
-            st.number_input("🚗 Car Count", value=car_count, disabled=True)
-            st.number_input("🏍️ Bike Count", value=bike_count, disabled=True)
-            st.number_input("🚌 Bus Count", value=bus_count, disabled=True)
+    with col1:
+        st.number_input("🚗 Car Count", value=car_count, disabled=True)
+        st.number_input("🏍️ Bike Count", value=bike_count, disabled=True)
+        st.number_input("🚌 Bus Count", value=bus_count, disabled=True)
 
-        with col2:
-            st.number_input("🚛 Truck Count", value=truck_count, disabled=True)
-            st.selectbox(
-                "📅 Day of Week",
-                options=[0,1,2,3,4,5,6],
-                index=day,
-                format_func=lambda x: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][x],
-                disabled=True
-            )
-            st.slider("⏰ Hour of Day", 0, 23, hour, disabled=True)
+    with col2:
+        st.number_input("🚛 Truck Count", value=truck_count, disabled=True)
+        st.selectbox(
+            "📅 Day of Week",
+            options=[0,1,2,3,4,5,6],
+            index=day,
+            format_func=lambda x: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][x],
+            disabled=True
+        )
+        st.slider("⏰ Hour of Day", 0, 23, hour, disabled=True)
 
-        st.info("📡 Live IoT sensor data received")
-
-    except:
-        st.error("❌ IoT server not running. Start Flask API & simulator.")
-        st.stop()
+    st.info("📡 Live IoT sensor data (simulated)")
 
 st.divider()
 
@@ -330,5 +337,8 @@ st.markdown(
     "<p style='text-align:center; color:gray;'>Academic Prototype – AI-based Smart Traffic Management 🚘</p>",
     unsafe_allow_html=True
 )
+
+
+
 
 
